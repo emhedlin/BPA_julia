@@ -7,7 +7,6 @@ using Distributions, Random, Turing, DataFrames, Distributed, Plots, MCMCChains,
 
 # Simulate Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 n_occ = 6                       # seasons 
 marked = repeat([50], n_occ-1)  # individuals marked each season
 phi = repeat([0.65], n_occ-1)   # survival probability from one t-1 to t 
@@ -42,54 +41,10 @@ end
 
 CH = sim_cjs(PHI, P, marked)
 
-#= 
- Inefficient model, but works with gibbs. Almost a 
- straight translation from BUGS/Jags
-=#
-
-# Model with Constant Parameters - add 4 threads for 4 parallel chains
-# addprocs(4)
-# @everywhere using Turing
-# @everywhere @model cjs_cc(CH, f, n_ind, n_occ) = begin
-#     # Empty matrices to be iterated over
-#     z = Matrix{Real}(undef, n_ind, n_occ)
-#     mu_phi = Matrix{Real}(undef, n_ind, n_occ)
-#     mu_p = Matrix{Real}(undef, n_ind, n_occ)
-#     phi = Matrix{Real}(undef, n_ind, n_occ)
-#     p   = Matrix{Real}(undef, n_ind, n_occ)
-# 
-#  # Priors
-#     phi_mean ~ truncated(Normal(0.5, 0.20), 0, 1)
-#     p_mean ~ truncated(Normal(0.5, 0.20), 0, 1)
-#     for i = 1:n_ind
-#         for t = f[i]:n_occ-1
-#             phi[i,t] = phi_mean
-#             p[i,t] = p_mean
-#         end
-#     end
-#  # Likelihood
-#     for i = 1:n_ind
-#         z[i,f[i]] = 1
-#         for t = f[i]+1:n_occ
-#             mu_phi[i,t] = phi[i,t-1] * z[i,t-1]
-#             z[i,t] ~ Bernoulli(mu_phi[i,t])
-# 
-#             mu_p[i,t] = p[i,t-1] * z[i,t]
-#             CH[i,t] ~ Bernoulli(mu_p[i,t])
-#         end
-#     end
-# 
-# end
-# 
-# 
-# n_ind = size(CH)[1]
-# chain = sample(cjs_cc(CH, f, n_ind, n_occ),  HMC(0.1, 5, :phi_mean, :p_mean), MCMCDistributed(), 1000, 4)
-
-#chain = sample(cjs_cc(CH, f, n_ind, n_occ),  PG(20, :phi_mean, :p_mean), 3000)
 
 
+# helper functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# helper functions
 # Probability of individual being alive and not captured.
 function prob_uncaptured(n_ind, n_occ, p, phi) 
     z = Matrix{Real}(undef, n_ind, n_occ)
@@ -124,8 +79,8 @@ end
 
 
 # Model Specification ~~~~~~~~~~~~~~~~~~~
+
 @model cjs_cc_marg(y, n_ind, n_occ) = begin
-    
     # Create empty matrices
     phi = Matrix{Real}(undef, n_ind, n_occ-1)
     p   = Matrix{Real}(undef, n_ind, n_occ-1)
@@ -170,7 +125,9 @@ end
     end
 end
 
+
 # Sample ~~~~~~~~~~~~~~~~~~~
+
 y = CH
 n_ind = size(y)[1]
 n_occ = size(y)[2]
