@@ -1,5 +1,10 @@
 ### Translating Bayesian Population Analysis (Kery and Schaub) into Julia/Turing.
 
+
+<p float="center">
+  <img src="figures/BPA.png" width="150" />
+</p>
+
 I love the overlap between raw julia code and model specification in Turing, and I'm curious to see how the workflow compares to R/BUGS/Stan. I'll translate data simulation functions into Julia, but I'll also upload the real data for when examples require it.
 
 ```
