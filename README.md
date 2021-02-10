@@ -9,15 +9,17 @@ I love how easy it is to integrate julia functions into model specification with
 
 ```
 ├── scripts.jl 
-│     └──  chapter_7_3.jl       <- CJS with constant parameters
+│     ├── chapter_7_3.jl       <- CJS with constant parameters
+│     └── chapter_7_4_1.jl     <- CJS with time-variation as fixed effect
 └── Rcode
       └── bpa-code.txt          <- for reference. Massive file with all Rcode used in the book
 
 ```
 
 #### Chapter 7 - Estimation of Survival from Capture-Recapture Data Using the CJS Model
-- [x] 7.3 Models with constant parameters - ```chapter_7_3.jl```
-- [ ] 7.4 Models with Time-Variation
+- [x] 7.3 Models with constant parameters      - ```chapter_7_3.jl```
+- [x] 7.4.1 Models with Time-Variation - fixed - ```chapter_7_4_1.jl```
+- [ ] 7.4.1 Models with Time-Variation - ranef - ```chapter_7_4_2.jl```
 - [ ] 7.4 Models with Individual-Variation
 
 
