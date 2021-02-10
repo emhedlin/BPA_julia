@@ -42,6 +42,11 @@ end
 
 CH = sim_cjs(PHI, P, marked)
 
+#= 
+ Inefficient model, but works with gibbs. Almost a 
+ straight translation from BUGS/Jags
+=#
+
 # Model with Constant Parameters - add 4 threads for 4 parallel chains
 # addprocs(4)
 # @everywhere using Turing
@@ -84,13 +89,7 @@ CH = sim_cjs(PHI, P, marked)
 
 
 
-
-
-# chains = mapreduce(c -> sample(cjs_cc(CH, f, n_ind, n_occ),  nuts(0.65, init_ϵ::Float64=0.0, :phi_mean, :p_mean), MCMCDistributed(), 3000), chainscat, 1:3)
-
-
 # helper functions
-
 # Probability of individual being alive and not captured.
 function prob_uncaptured(n_ind, n_occ, p, phi) 
     z = Matrix{Real}(undef, n_ind, n_occ)
@@ -121,6 +120,8 @@ function last_capture(y_i)
       end
     end
 end
+
+
 
 # Model Specification ~~~~~~~~~~~~~~~~~~~
 @model cjs_cc_marg(y, n_ind, n_occ) = begin
