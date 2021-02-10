@@ -1,2 +1,3 @@
-# BPA_julia
-Workspace to port Bayesian Population Analysis into Julia/Turing
+Translating Bayesian Population Analysis (Kery and Schaub) into Julia/Turing.
+
+
