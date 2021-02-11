@@ -1,20 +1,45 @@
 using Distributions, Random, Turing, DataFrames, Distributed, Plots, MCMCChains, StatsPlots, CSV
 
-threads 4
+
  
-# Chapter 7.3 - Models with Constant Parameters ~~~~~~~~~~
+# Chapter 7.4.2 - Random Time Effects ~~~~~~~~~~~~~~~~~~~~
+
+#= 
+From the book:
+The model shown in 7_4_1 treats time as a fixed-effects factor; for every
+occasion, an independent effect is estimated. To asses the temporal variability,
+we cannot simply take these fixed-effects estimates and calculate
+their variance. By doing so, we would ignore the fact that these values
+are estimates that have an unknown associated error. Thus, we would 
+assume that there is no sampling variance, and this can hardly ever be true. 
+However, when treating time as a random-effects factor, we can separate sampling
+(ie. variance within years) from process variance (ie variance between years),
+exactly as we did in the state-space models in chapter 5.
+=#
+
+
 
 
 # Simulate Data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-n_occ = 6                       # seasons 
-marked = repeat([50], n_occ-1)  # individuals marked each season
-phi = repeat([0.65], n_occ-1)   # survival probability from one t-1 to t 
-p = repeat([0.4], n_occ-1)      # resighting probability
+n_occ = 20                      # seasons 
+marked = repeat([30], n_occ-1)  # individuals marked each season
+mean_phi = 0.65
+var_phi = 1
+p = repeat([0.4], n_occ-1)
 
-PHI = repeat([phi[1]], sum(marked), n_occ-1)
-P = repeat([p[1]], sum(marked), n_occ-1)
+# Logit and inv logit functions
+logit(p) = log(p/(1-p))
+inv_logit(x) = (1+tanh(x/2))/2
 
+# create distribution to draw survival from and produce draws
+surv_dist = Normal(qlogis(mean_phi), var_phi^0.5)
+logit_phi = rand(surv_dist, n_occ-1)
+phi = inv_logit.(logit_phi)
+
+# generate matrices, n_ind x n_occ
+PHI = repeat(transpose(phi), inner=(sum(marked),1))
+P = repeat(transpose(p), inner=(sum(marked),1))
 
 function sim_cjs(PHI, P, marked) 
     n_occ = size(PHI)[2] + 1
@@ -81,8 +106,6 @@ end
 # Model Specification ~~~~~~~~~~~~~~~~~~~
 
 @model cjs_cc_marg(y) = begin
-    
-    # data dimensions
     n_ind,n_occ = size(y)
 
     # Create empty matrices
@@ -90,18 +113,34 @@ end
     p   = Matrix{Real}(undef, n_ind, n_occ-1)
     first = Vector{Int}(undef, n_ind)
     last  = Vector{Int}(undef, n_ind)
-
+    
+    
     # calculate first and last capture occasions
     for i in 1:n_ind
         first[i] = first_capture(y[i,:])
         last[i] = last_capture(y[i,:])
     end
     
-        # ~~~~ Priors ~~~~
+    # ~~~~ Priors ~~~~~~~~~~~~~~~~~~~~~~~
     mean_phi ~ Uniform(0,1)
     mean_p   ~ Uniform(0,1)
+    sigma   ~ Uniform(0,10)
+    epsilon ~ filldist(Normal(0, sigma), n_occ-1)
     
-    # Constraints on phi and p
+    # Constraints on phi and p / transformed parameters
+
+    #= 
+    The prior choices for μ and for σ² need some thought. Because
+    μ is the mean survival on the logit scale, a noninformative prior on the
+    logit scale would be a normal distribution with wide variance. Yet, this 
+    prior will not be noninformative on the probability scale. In the code 
+    below we provide two options: first, a normal distribution with wide 
+    variance for μ, and second, a uniform distribution for logit⁻¹(μ), which 
+    is noninformative on the probability scale but informative on the logit scale.
+    =#
+    
+    mu = logit(mean_phi)
+   
     for i in 1:n_ind
         for t in 1:first[i]-1
             phi[i,t] = 0
@@ -109,8 +148,8 @@ end
         end
         
         for t in first[i]:n_occ - 1
-            phi[i,t] = mean_phi # this is where you add linear models
-            p[i,t] = mean_p     # this is where you add linear models
+            phi[i,t] = inv_logit(mu + epsilon[t])
+            p[i,t] = mean_p     
         end
     end
     
@@ -131,15 +170,9 @@ end
 
 
 # Sample ~~~~~~~~~~~~~~~~~~~
-
 y = CH
-chain = sample(cjs_cc_marg(y),  NUTS(100, 0.65), 2500, save_state = false)
-
+model = cjs_cc_marg(y)
+chain = sample(model, NUTS(100, 0.65), 2500)
 
 
 plot(chain)
-
-
-
-
-
