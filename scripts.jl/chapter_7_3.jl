@@ -133,9 +133,9 @@ end
 # Sample ~~~~~~~~~~~~~~~~~~~
 
 y = CH
-chain = sample(cjs_cc_marg(y),  NUTS(100, 0.65), 2500, save_state = false)
+chain = sample(cjs_cc_marg(y),  NUTS(100, 0.65), 100, save_state = false)
 
-
+y
 
 plot(chain)
 
