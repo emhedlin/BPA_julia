@@ -1,89 +1,100 @@
-using Distributions, Random, Turing, DataFrames, Distributed, Plots, MCMCChains, StatsPlots, CSV, SpecialFunctions
+using Distributions, Random, Turing, DataFrames, Distributed, MCMCChains, StatsPlots, CSV
+using StatsFuns: logistic
+using Gadfly
 
-#= 
-What Happens when p < 1 and constant, and p is not accounted for in a species distribution model
 
-To fully grasph how the site-occupancy model "works", we first look at the simplest possible case: 
-both ecological and the observation process are described by an intercept only.
-=#
+
+# Single Season Occupancy, constant parameters
 
 # Spatial and Temporal replication
-R, T = 200, 3
-
-# Process Parameters
-ψ, p = 0.8, 0.5
-
-# observations
-y = zeros(R, T) # empty array
-z = rand!(Binomial(1, ψ), empty_array) #fill empty array with latent state
-
-# Observation process
-for i in 1:R 
-    for t in 1:T 
-        y[i,t] = (z[i,t] * rand(Binomial(1, p), 1))[1]
-    end
-end
-
-sum(z)
-sum(y)
-
-# WIP
-@model site_occ(y) begin
-    n_sites = size(y)[1]
-    n_time = size(y)[2]
-    occ_obs = zeros(n_sites)
-    sum_y = zeros(n_sites)
-
-    for i in 1:n_sites
-        sum_y[i] = sum(y[i]);
-        if sum_y[i]
-            occ_obs = occ_obs + 1
+function occ_sim(N,J,ψ,p) 
+        # true state
+    z = zeros(N) # empty array
+    z = rand!(Binomial(1, ψ), z) #fill empty array with latent state
+    z_mat = z .* ones(N, J) # replicate state across surveys
+    y = zeros(N,J)
+    # Observation process
+    for i in 1:N 
+        for t in 1:J 
+            y[i,t] = (z_mat[i,t] * rand(Binomial(1, p), 1))[1]
         end
     end
-
-    
-    # Likelihood ~~~~~~~
-    for i in 1:n_sites
-        if sum_y[i] < 0
-            1 ~ Bernoulli(psi)
-            y[i] ~ Bernoulli(p)
-        else
-            target += log(sum(exp()))
-        end
-    end
+  return y, z_mat
 end
 
+
+
+# Generate Data for single year occupancy with constant parameters
+y, z_mat = occ_sim(500, 3, 0.6, 0.4)
 
 n_sites = size(y)[1]
-n_time = size(y)[2]
-sum_y = zeros(n_sites)
+n_surv = size(y)[2]
+
+# True estimates (some noise around inputs)
+ψ_true = sum(z_mat[:,1]) / n_sites
+p_true = sum(y) / sum(z_mat)
+
+@model occ(y, n_sites, n_surv) = begin
+
+    # Priors ~~~
+    ψ_mean ~ Truncated(Normal(0.5, 0.2), 0,1)
+    p_mean ~ Truncated(Normal(0.5, 0.2), 0,1)
+
+    # Likelihood ~~~
+    for i in 1:n_sites
+        if sum(y[i,:]) > 0
+            for j in 1:n_surv
+                 y[i,j] ~ Bernoulli(p_mean)
+            end
+            1 ~ Bernoulli(ψ_mean)
+         end
+        if sum(y[i,:]) == 0
+        1 ~ Bernoulli( (ψ_mean*(1-p_mean)^n_surv) + (1-ψ_mean) ) 
+        end
+    end
+end 
+
+n_sites, n_surv = size(y)
+
+chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .65), 4000, drop_warmup = false), chainscat, 1:2)
+# chain = sample(occ(y, n_sites, n_surv),  PG(20), 1000, save_state = false)
+
+# trace plots and posteriors
+plot(chains)
+p_true
+ψ_true
+
+# running average plots
+mp = meanplot(chains::Chains)
+
+# plot joint density
+ψ_post = chains[:ψ_mean][:, 1]
+p_post = chains[:p_mean][:, 1]
+joint = marginalkde(post_p, post_ψ)
+plot(mp, jp, layout = (1, 2))
+
+# Simulate multiple data sets with all 
+# combinations of ψ and p between 0.3 and 0.7
+
+ψ_range = collect(0.3:0.1:0.7)
+p_range = collect(0.3:0.1:0.7)
+x = collect(Base.product(ψ_range,p_range))
+fill = Array{Real}(undef, length(x), 4)
+
+for i in 1:length(x)  
+        y, z_mat = occ_sim(500,5,x[i][1],x[i][2]) # N,J,ψᵢ,pᵢ 
+        chains = sample(occ(y, 500, 5), NUTS(1000, .95), 1000, drop_warmup = false)
+        fill[i,1] = x[i][1]
+        fill[i,2] = x[i][2]
+        fill[i,3] = mean(chains[:ψ_mean])
+        fill[i,4] = mean(chains[:p_mean])
+end
 
 
-#= 
-The true state of site i, occupied or not, is represented by the 
-parameter in our model "z". This is a discrete parameter, either 1 or 0,
-which has to be marginalized out to allow HMC sampling. In general,
-if you have a joint distribution for y (observation dependent on z and p), 
-and z (true state dependent on ψ), we obtain the marginal distribution of y by
-summing the joint distribution over all possible values of z, which in This
-case is 1 or 0:
-
-marginalized distribution:
-                  
-                 |log(ψ) + log(Binomial(yi | p))                         1. for yi > 0 
-log[y_i | p,ψ] = |
-                 |log(e^log(ψ) + log(Binomial(yi | p)) + e^log(1-ψ))     2. for yi = 0
-
-1.
-2. log(exp( log(ψ) + log(Binomial(yi|p) ) + exp( log(1-ψ)) ))
+plot(1:81, fill[:,1], seriestype = :scatter, seriesalpha = 0.25,palette = :Blues_9)
+plot!(1:81, fill[:,3], seriestype = :scatter, palette = :Blues_9)
 
 
+plot(1:81, fill[:,2], seriestype = :scatter, seriesalpha = 0.25)
+plot!(1:81, fill[:,4], seriestype = :scatter)
 
-
-=#
-
-
-
-
-x = 1:100
-plot(loggamma.(x))
