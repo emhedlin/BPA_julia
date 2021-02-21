@@ -24,6 +24,6 @@ On-going work to better understand population models, Stan, Julia, and marginali
 
 #### Chapter 13 - Estimation of Occupancy and Species Distributions from det/non-detect data in metapop designs using site occupancy models
 
-- [ ] 13.3 Single-season Occupancy  - ```chapter_13_3.jl```
+- [x] 13.3 Single-season Occupancy  - ```chapter_13_3.jl```
 
 
