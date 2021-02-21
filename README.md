@@ -4,12 +4,13 @@ Exploring Julia/Turing through population modeling.
 <p float="center">
   <img src="figures/BPA.png" width="150" />
 </p>
-
+chapter_13_3.jl
 
 ```
 ├── scripts.jl 
 │     ├── chapter_7_3.jl       <- CJS with constant parameters
-│     └── chapter_7_4_1.jl     <- CJS with time-variation as fixed effect
+│     ├── chapter_7_4_1.jl     <- CJS with time-variation as fixed effect
+│     └── chapter_13_3.jl      <- Single-season occupancy with constant parameters
 └── Rcode
       └── bpa-code.txt          <- for reference. Massive file with all Rcode used in the book
 
