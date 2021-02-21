@@ -1,5 +1,5 @@
 ### Translating Bayesian Population Analysis (Kery and Schaub) into Julia/Turing.
-Explore Julia/Turing through population modeling. 
+Exploring Julia/Turing through population modeling. 
 
 <p float="center">
   <img src="figures/BPA.png" width="150" />
