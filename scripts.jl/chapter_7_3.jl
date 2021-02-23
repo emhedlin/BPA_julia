@@ -59,6 +59,10 @@ function prob_uncaptured(n_ind, n_occ, p, phi)
     return z        
 end
 
+
+
+
+
 function first_capture(y_i)
     for k in 1:length(y_i)
         if y_i[k] == 1

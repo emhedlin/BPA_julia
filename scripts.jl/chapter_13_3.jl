@@ -1,6 +1,6 @@
-using Distributions, Random, Turing, DataFrames, Distributed, MCMCChains, StatsPlots, CSV
+using Distributions, Random, Turing, MCMCChains, Gadfly
 using StatsFuns: logistic
-using Gadfly
+
 
 
 
@@ -11,7 +11,7 @@ function occ_sim(N,J,ψ,p)
         # true state
     z = zeros(N) # empty array
     z = rand!(Binomial(1, ψ), z) #fill empty array with latent state
-    z_mat = z .* ones(N, J) # replicate state across surveys
+    z_mat = z .* ones(N, J) # replicate occupancy state across surveys
     y = zeros(N,J)
     # Observation process
     for i in 1:N 
@@ -76,8 +76,8 @@ plot(mp, jp, layout = (1, 2))
 # Simulate multiple data sets with all 
 # combinations of ψ and p between 0.3 and 0.7
 
-ψ_range = collect(0.3:0.1:0.7)
-p_range = collect(0.3:0.1:0.7)
+ψ_range = collect(0.3:0.2:0.7)
+p_range = collect(0.3:0.2:0.7)
 x = collect(Base.product(ψ_range,p_range))
 fill = Array{Real}(undef, length(x), 4)
 
@@ -90,8 +90,22 @@ for i in 1:length(x)
         fill[i,4] = mean(chains[:p_mean])
 end
 
+true_ψ = fill[:,1]
+true_p = fill[:,2]
+m_ψ = fill[:,3]
+m_p = fill[:,4]
 
-plot(1:81, fill[:,1], seriestype = :scatter, seriesalpha = 0.25,palette = :Blues_9)
+
+
+plot(layer(x = 1:1:9, y=true_ψ, Geom.point),
+     layer(x = 1:1:9, y=m_ψ, Geom.point),
+     grid_color = "white"
+     )
+
+
+     plot!(x = fill[:,2], y = fill[:,4])
+
+
 plot!(1:81, fill[:,3], seriestype = :scatter, palette = :Blues_9)
 
 

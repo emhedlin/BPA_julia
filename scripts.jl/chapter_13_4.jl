@@ -2,88 +2,114 @@ using Distributions, Random, Turing, DataFrames, Distributed, Plots, MCMCChains,
 using StatsFuns: logistic
 
 #= 
-single season occupancy, varying parameters
-
-WIP
+single season occupancy with covariates
 =#
 
-# Spatial and Temporal replication
-R, T = 200, 3
+n_sites = 200
+n_surv = 3
+xmin = -1
+xmax = 1
+α_ψ = -1
+β_ψ = 3
+α_p = 1
+β_p = -3
 
-# Process Parameters
-ψ, p = 0.5, 0.3
+ones(n_sites)
+rand(Binomial(1, 0.5))
 
-# observations
-z = zeros(R) # empty array
-z = rand!(Binomial(1, ψ), z) #fill empty array with latent state
-z_mat = [z z z]
+function sim_occ_cov(n_sites, n_surv, xmin, xmax, α_ψ, β_ψ, α_p, β_p)
+    ψ = Array{Real}(undef, n_sites)
+    y = Array{Any}(undef, n_sites, n_surv)
+    z = Array{Any}(undef, n_sites)
 
+    X = rand(Uniform(xmin, xmax), n_sites)
+    ψ = logistic.(α_ψ .+ β_ψ.* X)
+    z = map(rand, Binomial.(1, ψ))    
+    occ_fs = sum(z)
 
-
-
-
-y = zeros(R,T)
-# Observation process
-for i in 1:R 
-    for t in 1:T 
-        y[i,t] = (z_mat[i,t] * rand(Binomial(1, p), 1))[1]
+    p = logistic.(α_p .+ β_p.*X)
+    
+    # survey effect
+    p_eff = z.*p
+    for t in 1:n_surv
+        y[:,t] = map(rand, Binomial.(1, p_eff))
     end
+    
+    return y, z, X
 end
 
-sum(z_mat)
-sum(y)
 
-n_sites = size(y)[1]
-n_surv = size(y)[2]
+y, z, X = sim_occ_cov(200, 3, -1, 1, -1, 3, 1, -3)
 
 
-@model occ(y, n_sites, n_surv) = begin
+# Model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@model occ(y,n_sites, n_surv, X) = begin
     p = Array{Real}(undef, n_sites, n_surv)
     ψ = Array{Real}(undef, n_sites)
+    
 
-    ψ_mean ~ Uniform(0,1)
-    p_mean ~ Uniform(0,1)
+    # Priors
+    for i in 1:length(n_sites)
+        ψ[i] ~ Uniform(0,1)
+        for j in 1:length(n_surv)
+            p[i,j] ~ Uniform(0,1)
+        end
+    end
+    α_ψ ~ Normal(0,4)
+    β_ψ ~ Normal(0,4)
+    α_p ~ Normal(0,4)
+    β_p ~ Normal(0,4)
 
+
+
+    # Likelihood    
     for i in 1:n_sites
     # There is at least one detection at siteᵢ 
     # we know zᵢ == 1
-         if sum(y[i,:]) > 0
-             for j in 1:n_surv
-                 #ψ[i] = logistic(ψ_mean)
-                 #p[i,j] = logistic(p_mean)
-                 y[i,j] ~ Bernoulli(p_mean)
-                end
-            1 ~ Bernoulli(ψ_mean)
-         end
+        if sum(y[i,:]) > 0
+            for j in 1:n_surv # ADD BROADCAST 
+                p[i,j] = logistic( α_p + β_p* X[i] )
+                 y[i,j] ~ Bernoulli(p[i,j])
+            end
+            ψ[i] = logistic( α_ψ + β_ψ*X[i] )
+            1 ~ Bernoulli(ψ[i])
+        end
     
     # There are no detections at siteᵢ - c
     # zᵢ == 1 (prob ψ)  and wasn't detected (prob 1 - p), 
     # or zᵢ == 0 (prob 1 - ψ)
         if sum(y[i,:]) == 0
             
-            # for j in 1:n_surv
-            #     p[i,j] = logistic(p_mean)
-            # end
-
-            1 ~ Bernoulli(ψ_mean * (1-p_mean)) 
-            1 ~ Bernoulli((1 - ψ_mean))
+            for j in 1:n_surv # ADD BROADCAST
+                p[i,j] = logistic(α_p + β_p*X[i])
+            end 
            
+            ψ[i] = logistic( α_ψ + β_ψ*X[i] )
+            1 ~ Bernoulli( (ψ[i]*( (1-p[i,1])*(1-p[i,2])*(1-p[i,3]) )) + (1-ψ[i]) )
+
         end
     end
 end 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .95), 2000, drop_warmup = false), chainscat, 1:2)
 
-p
-z_true = sum(z) / length(z)
+n_sites, n_surv = size(y)
+chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .65), 2000, drop_warmup = false), chainscat, 1:2)
 
-chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .95), 2000, drop_warmup = false), chainscat, 1:2)
+α_p
+α_ψ
+β_p
+β_ψ
 
-
-
-display(chains)
 
 # trace plots and posteriors
 plot(chains)
+α_p
+α_ψ
+β_p
+β_ψ
+
 
 # running average plots
 mp = meanplot(chains::Chains)
@@ -93,25 +119,5 @@ post_ψ = chains[:ψ][:, 1]
 post_p = chains[:p][:, 1]
 jp = marginalkde(post_p, post_ψ)
 plot(mp, jp, layout = (1, 2))
-
-
-
-
-
-
-
-
-function prob_uncaptured(n_sites, n_surv, p, ψ) 
-    z = Matrix{Real}(undef, n_sites, n_surv)
-    for i in 1:n_sites
-        z[i, n_surv] = 1.0;
-        for t in 1:n_surv
-            z[i, t] = (1 - ψ_mean) + ψ_mean * (1 - p[i, t]);
-        end
-    end
-    return z        
-end
-
-
 
 
