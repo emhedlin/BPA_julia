@@ -26,5 +26,7 @@ chapter_13_3.jl
 #### Chapter 13 - Estimation of Occupancy and Species Distributions from det/non-detect data in metapop designs using site occupancy models
 
 - [x] 13.3 Single-season Occupancy  - ```chapter_13_3.jl```
+- [x] 13.4 Single-season Occupancy with covariates - ```chapter_13_4.jl```
+- [ ] 13.5 Dynamic multi-season occupancy - ```chapter_13_5.jl```
 
 
