@@ -10,7 +10,9 @@ chapter_13_3.jl
 ├── scripts.jl 
 │     ├── chapter_7_3.jl       <- CJS with constant parameters
 │     ├── chapter_7_4_1.jl     <- CJS with time-variation as fixed effect
-│     └── chapter_13_3.jl      <- Single-season occupancy with constant parameters
+│     ├── chapter_13_3.jl      <- Single-season occupancy with constant parameters
+│     ├── chapter_13_4.jl      <- Single-season occupancy, heterogenous parameters explained by covariates
+│     └── chapter_13_5.jl      <- Dynamic multi-season occupancy with constant parameters
 └── Rcode
       └── bpa-code.txt          <- for reference. Massive file with all Rcode used in the book
 
