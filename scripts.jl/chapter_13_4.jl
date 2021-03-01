@@ -5,17 +5,6 @@ using StatsFuns: logistic
 single season occupancy with covariates
 =#
 
-n_sites = 200
-n_surv = 3
-xmin = -1
-xmax = 1
-α_ψ = -1
-β_ψ = 3
-α_p = 1
-β_p = -3
-
-ones(n_sites)
-rand(Binomial(1, 0.5))
 
 function sim_occ_cov(n_sites, n_surv, xmin, xmax, α_ψ, β_ψ, α_p, β_p)
     ψ = Array{Real}(undef, n_sites)
@@ -55,6 +44,7 @@ y, z, X = sim_occ_cov(200, 3, -1, 1, -1, 3, 1, -3)
             p[i,j] ~ Uniform(0,1)
         end
     end
+    #ψ ~ filldist(Uniform(0,1), n_sites)
     α_ψ ~ Normal(0,4)
     β_ψ ~ Normal(0,4)
     α_p ~ Normal(0,4)
@@ -69,7 +59,7 @@ y, z, X = sim_occ_cov(200, 3, -1, 1, -1, 3, 1, -3)
         if sum(y[i,:]) > 0
             for j in 1:n_surv # ADD BROADCAST 
                 p[i,j] = logistic( α_p + β_p* X[i] )
-                 y[i,j] ~ Bernoulli(p[i,j])
+                y[i,j] ~ Bernoulli(p[i,j])
             end
             ψ[i] = logistic( α_ψ + β_ψ*X[i] )
             1 ~ Bernoulli(ψ[i])
@@ -95,6 +85,9 @@ end
 # chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .95), 2000, drop_warmup = false), chainscat, 1:2)
 
 n_sites, n_surv = size(y)
+chains = sample(occ(y, n_sites, n_surv, X), NUTS(1000, .65), 2000, drop_warmup = false)
+
+
 chains = mapreduce(c -> sample(occ(y, n_sites, n_surv), NUTS(1000, .65), 2000, drop_warmup = false), chainscat, 1:2)
 
 α_p

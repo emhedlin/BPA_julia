@@ -1,26 +1,11 @@
 using Distributions, Random, Turing, MCMCChains, Gadfly
 using StatsFuns: logistic
+include("utils.jl")
 
 
 
 
 # Single Season Occupancy, constant parameters
-
-# Spatial and Temporal replication
-function occ_sim(N,J,ψ,p) 
-        # true state
-    z = zeros(N) # empty array
-    z = rand!(Binomial(1, ψ), z) #fill empty array with latent state
-    z_mat = z .* ones(N, J) # replicate occupancy state across surveys
-    y = zeros(N,J)
-    # Observation process
-    for i in 1:N 
-        for t in 1:J 
-            y[i,t] = (z_mat[i,t] * rand(Binomial(1, p), 1))[1]
-        end
-    end
-  return y, z_mat
-end
 
 
 
@@ -99,8 +84,7 @@ m_p = fill[:,4]
 
 plot(layer(x = 1:1:9, y=true_ψ, Geom.point),
      layer(x = 1:1:9, y=m_ψ, Geom.point),
-     grid_color = "white"
-     )
+     grid_color = "white")
 
 
      plot!(x = fill[:,2], y = fill[:,4])
