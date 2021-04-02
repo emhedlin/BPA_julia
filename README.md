@@ -1,9 +1,9 @@
-Using this space to practice marginilizing discretes while exploring Julia/Turing. Very much a work in progress.
+
 
 <p float="center">
   <img src="figures/BPA.png" width="150" />
 </p>
-chapter_13_3.jl
+
 
 ```
 ├── scripts.jl 
