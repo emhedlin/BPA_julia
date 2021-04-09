@@ -6,28 +6,6 @@ single season occupancy with covariates
 =#
 
 
-function sim_occ_cov(n_sites, n_surv, xmin, xmax, α_ψ, β_ψ, α_p, β_p)
-    ψ = Array{Real}(undef, n_sites)
-    y = Array{Any}(undef, n_sites, n_surv)
-    z = Array{Any}(undef, n_sites)
-
-    X = rand(Uniform(xmin, xmax), n_sites)
-    ψ = logistic.(α_ψ .+ β_ψ.* X)
-    z = map(rand, Binomial.(1, ψ))    
-    occ_fs = sum(z)
-
-    p = logistic.(α_p .+ β_p.*X)
-    
-    # survey effect
-    p_eff = z.*p
-    for t in 1:n_surv
-        y[:,t] = map(rand, Binomial.(1, p_eff))
-    end
-    
-    return y, z, X
-end
-
-
 y, z, X = sim_occ_cov(200, 3, -1, 1, -1, 3, 1, -3)
 
 

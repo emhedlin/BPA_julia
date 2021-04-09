@@ -118,5 +118,5 @@ function sim_occ_dyn(n_sites, n_surv, n_years, ψ₁, range_p, range_ϕ, range_�
         end
     end
 
-    return y, mean(γ), mean(ϕ), mean(p), z
+    return y, γ, ϕ, p, z
 end
