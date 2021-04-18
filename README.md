@@ -16,6 +16,9 @@
       └── bpa-code.txt          <- for reference. Massive file with all Rcode used in the book
 
 ```
+#### Chapter 5 - State-Space Models for Population Counts
+- [ ] 5.2 A Simple Model - ```chapter_5_2.jl```
+
 
 #### Chapter 7 - Estimation of Survival from Capture-Recapture Data Using the CJS Model
 - [x] 7.3 Models with constant parameters      - ```chapter_7_3.jl```
