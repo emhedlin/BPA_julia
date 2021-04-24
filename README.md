@@ -1,7 +1,7 @@
 
 
 <p float="center">
-  <img src="figures/BPA.png" width="150" />
+  <img src="figures/BPA.png?raw=true" width="150" alt="bpa"/>
 </p>
 
 
