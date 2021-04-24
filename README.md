@@ -34,3 +34,10 @@
 - [ ] 13.5 Dynamic multi-season occupancy - ```chapter_13_5.jl```
 
 
+
+$$ 
+
+\beta \sim \alpha_{i,t} \\
+\gamma \sim \textrm{Normal}(\mu, \sigma^2)
+
+$$

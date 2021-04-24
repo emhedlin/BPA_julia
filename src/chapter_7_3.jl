@@ -1,6 +1,6 @@
 using Distributions, Random, Turing, DataFrames, Distributed, Plots, MCMCChains, StatsPlots, CSV
 
-
+include("utils.jl")
  
 # Chapter 7.3 - Models with Constant Parameters ~~~~~~~~~~
 
