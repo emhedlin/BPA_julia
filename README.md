@@ -34,5 +34,5 @@
 - [ ] 13.5 Dynamic multi-season occupancy - ```chapter_13_5.jl```
 
 
-<div align="center"><img style="background: white;" src="svg/xZDgloIaKG.svg"></div>
+<div align="center"><img style="background: transparent;" src="svg/xZDgloIaKG.svg"></div>
 
