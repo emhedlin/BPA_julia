@@ -35,11 +35,10 @@
 
 
 
-$$ 
+<!-- $$ 
 \beta \sim \alpha_{i,t} \\
 \gamma \sim \textrm{Normal}(\mu, \sigma^2)
-$$
+$$ --> 
 
-<!-- $$
-\ell = \sum_{i}^{N}(y_i - \hat{y}_i)^2 - ||w||_2^2
-$$ -->
+<div align="center"><img style="background: white;" src="svg/xZDgloIaKG.svg"></div>
+
