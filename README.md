@@ -1,4 +1,4 @@
-
+A repo to organize efforts to port the popular BPA text into Julia. 
 
 <p float="center">
   <img src="figures/BPA.png?raw=true" width="150" alt="bpa"/>
