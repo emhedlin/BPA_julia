@@ -34,5 +34,3 @@ A repo to organize efforts to port the popular BPA text into Julia.
 - [ ] 13.5 Dynamic multi-season occupancy - ```chapter_13_5.jl```
 
 
-<div align="center"><img style="background: transparent;" src="svg/xZDgloIaKG.svg"></div>
-
