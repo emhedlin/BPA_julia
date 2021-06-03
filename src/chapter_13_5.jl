@@ -48,7 +48,7 @@ yₜ = 0 | yₜ₋₁ = 0 # Extinction or Survival or Colonization or remains un
 # ϕ_true = Array{Real}(undef, n_years-1)
 # p_true = Array{Real}(undef, n_years)
 
-#                             N   J   K   ψ₁       p          ϕ         γ 
+#                                            N   J   K   ψ₁       p          ϕ         γ 
 y, γ_true, ϕ_true, p_true, z = sim_occ_dyn( 250, 3, 10, 0.4, [0.2 0.4], [0.6 0.8], [0.3 0.6] )
 
 
