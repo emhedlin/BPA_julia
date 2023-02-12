@@ -6,7 +6,7 @@ Familiarization with Julia, Turing, and marginlization! WIP 4ever.
 
 
 ```
-├── scripts.jl 
+├── src 
 │     ├── chapter_7_3.jl       <- CJS with constant parameters
 │     ├── chapter_7_4_1.jl     <- CJS with time-variation as fixed effect
 │     ├── chapter_13_3.jl      <- Single-season occupancy with constant parameters
