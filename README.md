@@ -1,4 +1,4 @@
-Familiarization with Julia, Turing, and marginlization! WIP 4ever. 
+Familiarization with Julia, Turing, and marginlization. WIP 4ever. 
 
 <p float="center">
   <img src="figures/BPA.png?raw=true" width="150" alt="bpa"/>
